@@ -31,7 +31,7 @@ export function SignupForm() {
       }, 2000)
     })
 
-    console.log("signup", values)
+    console.log("signu", values)
   }
 
   if (success) {
