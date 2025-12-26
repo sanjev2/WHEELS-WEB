@@ -82,7 +82,7 @@
                 <button onClick={() => scrollToSection("download")} className="mobile-menu-link">
                 Download
                 </button>
-                <Link href="/auth/login" className="btn-book-mobile">
+                <Link href="/auth/logi" className="btn-book-mobile">
                 Book Now
                 </Link>
             </div>
