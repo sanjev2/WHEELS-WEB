@@ -28,7 +28,7 @@ export function LoginForm() {
       router.push("/dashboard")
     })
 
-    console.log("logi", values)
+    console.log("login", values)
   }
 
   return (

@@ -10,7 +10,7 @@ export const loginSchema = z.object({
 // Type for login form data
 export type LoginData = z.infer<typeof loginSchema>
 
-// Register / Signup form schem
+// Register / Signup form schema
 export const registerSchema = z
   .object({
     name: z.string().min(2, "Full name is required"),
