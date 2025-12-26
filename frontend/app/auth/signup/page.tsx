@@ -1,0 +1,11 @@
+"use client"
+
+import { SignupForm } from "../components/Signupform"
+
+export default function SignupPage() {
+  return (
+    <div className="auth-card">
+      <SignupForm />
+    </div>
+  )
+}
