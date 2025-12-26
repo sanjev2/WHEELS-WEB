@@ -4,7 +4,7 @@ import "../styles/auth.css"
 
 export const metadata: Metadata = {
   title: "Authentication - WHEELS",
-  description: "Sign in or create an accoun",
+  description: "Sign in or create an account",
 }
 
 export default function AuthLayout({
