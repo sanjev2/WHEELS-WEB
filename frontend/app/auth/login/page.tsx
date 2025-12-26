@@ -4,7 +4,7 @@ import { LoginForm } from "../components/Loginform"
 
 export default function LoginPage() {
   return (
-    <div className="auth-card">
+    <div className="auth-car">
       <LoginForm />
     </div>
   )
