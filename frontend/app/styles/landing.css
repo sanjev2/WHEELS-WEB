@@ -12,7 +12,7 @@
   --color-text-muted: #94a3b8;
 
   /* Transitions */
-  --transition: all 0.3s ese;
+  --transition: all 0.3s ease;
 }
 
 

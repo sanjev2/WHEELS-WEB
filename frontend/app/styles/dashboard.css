@@ -9,7 +9,7 @@
 .dashboard-sidebar {
   width: 280px;
   background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
-  border-right: 1px solid #e5e7b;
+  border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
   position: fixed;

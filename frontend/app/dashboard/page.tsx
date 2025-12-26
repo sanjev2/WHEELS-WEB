@@ -9,7 +9,7 @@ export default function Dashboard() {
   const router = useRouter()
 
   const handleLogout = () => {
-    router.push("/auth/logi")
+    router.push("/auth/login")
   }
 
   const navItems = [
