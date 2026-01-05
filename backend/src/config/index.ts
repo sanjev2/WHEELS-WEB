@@ -6,4 +6,4 @@ export const PORT: number =
 export const MONGODB_URI: string = 
     process.env.MONGODB_URI || 'mongodb://localhost:27017/wheels_backend';
 export const JWT_SECRET: string = 
-    process.env.JWT_SECRET || 'wheel';  
+    process.env.JWT_SECRET || 'wheels';  
