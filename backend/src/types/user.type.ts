@@ -41,7 +41,7 @@
     contact: string
     address: string
     password: string
-    role: 'user' | 'admi'
+    role: 'user' | 'admin'
     createdAt: Date
     updatedAt: Date
     }
