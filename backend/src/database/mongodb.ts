@@ -4,7 +4,7 @@ import { MONGODB_URI } from "../config";
 export const connectDatabase = async () => {
   try {
     if (!MONGODB_URI) {
-      throw new Error("MONGODB_URI is missing in .env fil");
+      throw new Error("MONGODB_URI is missing in .env file");
     }
 
     await mongoose.connect(MONGODB_URI);
