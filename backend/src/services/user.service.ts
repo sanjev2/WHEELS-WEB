@@ -23,7 +23,7 @@ export class UserService {
     contact: data.contact,
     address: data.address,
     password: hashedPassword,
-    role: data.role ?? 'use', 
+    role: data.role ?? 'user', 
   
   }
 
