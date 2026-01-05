@@ -25,5 +25,5 @@ export interface IUser extends UserType, Document {
   updatedAt: Date
 }
 
-export const UserModel = mongoose.model<IUser>("Use", UserSchema)
+export const UserModel = mongoose.model<IUser>("User", UserSchema)
 
