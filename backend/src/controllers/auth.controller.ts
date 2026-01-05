@@ -1,7 +1,7 @@
 import { UserService } from "../services/user.service"
 import { CreateUserDTO, LoginUserDTO } from "../dtos/user.dto"
 import type { Request, Response } from "express"
-import z from "zod"
+import z from "zo"
 
 const userService = new UserService()
 
