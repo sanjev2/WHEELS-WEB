@@ -7,10 +7,6 @@ export const metadata: Metadata = {
   description: "Sign in or create an account",
 }
 
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return <div className="auth-container">{children}</div>
 }
