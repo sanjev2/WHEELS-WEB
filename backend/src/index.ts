@@ -1,50 +1,39 @@
 import express, { Application, Request, Response } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
+import path from "path"
 import { connectDatabase } from "./database/mongodb"
 import { PORT } from "./config"
 import authRoutes from "./routes/auth.routes"
+import adminUsersRoutes from "./routes/admin.routes"
 
 const app: Application = express()
 
-// Body parsers
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-// ✅ SIMPLE & SAFE CORS (Frontend only)
 app.use(
   cors({
-    origin: "http://localhost:3000", // ✅ frontend URL
+    origin: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
   })
 )
 
-// ✅ Handle preflight requests
-app.use((req, res, next) => {
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204)
-  }
-  next()
-})
+app.use("/public", express.static(path.join(process.cwd(), "public")))
 
-// Routes
 app.use("/api/auth", authRoutes)
+app.use("/api/admin/users", adminUsersRoutes)
 
-app.get("/", (req: Request, res: Response) => {
-  return res.status(200).json({
-    success: true,
-    message: "Welcome to the API",
-  })
+app.get("/", (_req: Request, res: Response) => {
+  return res.status(200).json({ success: true, message: "Welcome to the API" })
 })
 
 async function startServer() {
   await connectDatabase()
-
   app.listen(PORT, () => {
     console.log(`Server running on: http://localhost:${PORT}`)
-    console.log("CORS enabled for: http://localhost:3000")
+    console.log(`Static files served on: http://localhost:${PORT}/public`)
   })
 }
 

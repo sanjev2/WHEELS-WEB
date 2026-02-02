@@ -1,5 +1,5 @@
-import mongoose, { type Document, Schema } from "mongoose"
-import type { UserType } from "../types/user.type"
+import mongoose, { type Document, Schema } from "mongoose";
+import type { UserType } from "../types/user.type";
 
 const UserSchema: Schema = new Schema<UserType>(
   {
@@ -10,20 +10,22 @@ const UserSchema: Schema = new Schema<UserType>(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ['user', 'admin'],
-      default: 'user', 
+      enum: ["user", "admin"],
+      default: "user",
     },
+
+    // ✅ ADD ONLY THIS
+    profile_picture: { type: String, default: null },
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
 export interface IUser extends UserType, Document {
-  _id: mongoose.Types.ObjectId
-  createdAt: Date
-  updatedAt: Date
+  _id: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export const UserModel = mongoose.model<IUser>("User", UserSchema)
-
+export const UserModel = mongoose.model<IUser>("User", UserSchema);
