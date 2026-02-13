@@ -6,6 +6,7 @@ node_modules/
 
 # environment files
 .env
+.env.test
 .env.*
 !.env.example
 
