@@ -28,7 +28,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [adminLoading, setAdminLoading] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
 
-  // ✅ Fix reload UI flip: wait for hydration, then enforce auth
+  // ✅ Redirect ONLY in effect (never in render)
   useEffect(() => {
     if (!isHydrated) return
     if (!token) router.replace("/auth/login")
@@ -93,8 +93,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   }
 
-  // ✅ Keep UI stable during hydration (prevents switching layouts)
-  if (!isHydrated) {
+  // ✅ During hydration or missing token, keep UI stable (do NOT render dashboard UI)
+  if (!isHydrated || !token) {
     return (
       <div className="min-h-screen grid place-items-center bg-slate-50">
         <div className="rounded-2xl border bg-white px-5 py-3 text-sm text-gray-600 shadow-sm">
@@ -103,9 +103,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       </div>
     )
   }
-
-  // ✅ after hydration, if no token: redirect effect runs; render nothing
-  if (!token) return null
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -174,7 +171,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               </div>
 
               <div className="flex items-center gap-2">
-                {/* ✅ Admin button (opens modal) */}
                 <button
                   onClick={handleAdminClick}
                   className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700

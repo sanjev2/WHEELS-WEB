@@ -1,7 +1,6 @@
 "use client"
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
-import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
 import type { LoginData, RegisterData } from "@/app/auth/schema"
 import { authActions } from "@/app/lib/actions/auth-action"
@@ -34,22 +33,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const USER_COOKIE = "wheels_user"
 const TOKEN_COOKIE = "wheels_token"
 
-// ✅ IMPORTANT cookie options: makes cookie available on ALL routes
 const COOKIE_OPTIONS = {
   expires: 1,
-  path: "/",       // ✅ THIS IS THE FIX
+  path: "/",
   sameSite: "lax" as const,
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
-
   const [isLoading, setIsLoading] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
 
-  const router = useRouter()
-
+  // Load cookies once
   useEffect(() => {
     const storedUser = Cookies.get(USER_COOKIE)
     const storedToken = Cookies.get(TOKEN_COOKIE)
@@ -82,20 +78,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       await authActions.signup(payload)
-      router.push("/auth/login")
+      window.location.href = "/auth/login"
     } finally {
       setIsLoading(false)
     }
   }
 
+  // ⭐⭐⭐ THIS IS THE MAGIC FIX ⭐⭐⭐
   const login = async (payload: LoginData) => {
     setIsLoading(true)
     try {
       const { user: u, token: t } = await authActions.login(payload)
       persist(u, t)
 
-      // ✅ route after login (change if your admin goes elsewhere)
-      router.push("/dashboard")
+      // Hard reload → same as manual refresh → UI perfect
+      window.location.href = "/dashboard"
     } finally {
       setIsLoading(false)
     }
@@ -110,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     persist(null, null)
-    router.push("/")
+    window.location.href = "/"
   }
 
   const value = useMemo(

@@ -38,7 +38,6 @@ export const authApi = {
   },
 
   updateUserForm: async (token: string, id: string, fd: FormData) => {
-    // PUT /api/auth/:id supports JSON + multipart. We'll use multipart always for profile.
     return httpAuthForm<any>(endpoints.updateUser(id), token, fd, { method: "PUT" })
   },
 
@@ -46,5 +45,25 @@ export const authApi = {
     return httpAuthForm<any>(endpoints.uploadProfile, token, fd, { method: "POST" })
   },
 
-}
+  // ✅ forgot password
+  forgotPassword: async (email: string) => {
+    return httpJson<any>(endpoints.forgotPassword, {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    })
+  },
 
+  verifyResetCode: async (email: string, code: string) => {
+    return httpJson<any>(endpoints.verifyResetCode, {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    })
+  },
+
+  resetPassword: async (resetToken: string, newPassword: string) => {
+    return httpJson<any>(endpoints.resetPassword, {
+      method: "POST",
+      body: JSON.stringify({ resetToken, newPassword }),
+    })
+  },
+}

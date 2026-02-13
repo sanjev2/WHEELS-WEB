@@ -31,11 +31,32 @@ export async function adminAuthFetch<T>(url: string, token: string, options: Req
 }
 
 export const adminUsersApi = {
-  getAll: (token: string) => adminAuthFetch<any>(endpoints.adminUsers, token),
+  // ✅ NEW: supports page/limit/search
+  getAll: (token: string, params?: { page?: number; limit?: number; search?: string }) => {
+    const page = params?.page ?? 1
+    const limit = params?.limit ?? 10
+    const search = (params?.search ?? "").trim()
+
+    const url = new URL(endpoints.adminUsers)
+    url.searchParams.set("page", String(page))
+    url.searchParams.set("limit", String(limit))
+    if (search) url.searchParams.set("search", search)
+
+    return adminAuthFetch<{
+      success: boolean
+      data: any[]
+      pagination: { page: number; limit: number; total: number; totalPages: number }
+    }>(url.toString(), token)
+  },
+
   getById: (token: string, id: string) => adminAuthFetch<any>(endpoints.adminUserById(id), token),
+
   create: (token: string, formData: FormData) =>
     adminAuthFetch<any>(endpoints.adminUsers, token, { method: "POST", body: formData }),
+
   update: (token: string, id: string, formData: FormData) =>
     adminAuthFetch<any>(endpoints.adminUserById(id), token, { method: "PUT", body: formData }),
-  remove: (token: string, id: string) => adminAuthFetch<any>(endpoints.adminUserById(id), token, { method: "DELETE" }),
+
+  remove: (token: string, id: string) =>
+    adminAuthFetch<any>(endpoints.adminUserById(id), token, { method: "DELETE" }),
 }

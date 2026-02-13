@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Pencil, Trash2, Plus, Search, RefreshCw } from "lucide-react"
+import { Pencil, Trash2, Plus, Search, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react"
 import { useAuth } from "@/app/context/auth-contexts"
-import { apiAuthWithToken } from "@/app/lib/api-clients"
+import { adminUsersApi } from "@/app/lib/api/admin/user"
 
 type User = {
   _id: string
@@ -16,39 +16,48 @@ type User = {
   profile_picture?: string | null
 }
 
-type ApiResponse = { success: boolean; data: User[] }
-
-export default function AdminUserPage() {
-  const { token, isLoading } = useAuth()
+export default function AdminUsersPage() {
+  const { token, isLoading, isHydrated } = useAuth()
 
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [q, setQ] = useState("")
+  const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [pagination, setPagination] = useState<{ page: number; limit: number; total: number; totalPages: number }>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+  })
+
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const filtered = useMemo(() => {
-    const query = q.trim().toLowerCase()
-    if (!query) return users
-    return users.filter((u) => {
-      const hay = `${u.name} ${u.email} ${u.role}`.toLowerCase()
-      return hay.includes(query)
-    })
-  }, [users, q])
+  const canPrev = pagination.page > 1
+  const canNext = pagination.page < pagination.totalPages
 
-  const load = async () => {
+  const load = async (opts?: { nextPage?: number; nextLimit?: number; nextSearch?: string }) => {
     if (!token) {
       setError("No token. Please login again.")
       setLoading(false)
       return
     }
 
+    const nextPage = opts?.nextPage ?? page
+    const nextLimit = opts?.nextLimit ?? limit
+    const nextSearch = (opts?.nextSearch ?? search).trim()
+
     setLoading(true)
     setError(null)
+
     try {
-      const res = await apiAuthWithToken<ApiResponse>(token, "/admin/users")
-      setUsers(res.data || [])
+      const res = await adminUsersApi.getAll(token, { page: nextPage, limit: nextLimit, search: nextSearch })
+      setUsers((res.data || []) as User[])
+      setPagination(res.pagination || { page: nextPage, limit: nextLimit, total: 0, totalPages: 1 })
+      setPage(nextPage)
+      setLimit(nextLimit)
     } catch (e: any) {
       setError(e.message || "Failed to load users")
     } finally {
@@ -56,16 +65,22 @@ export default function AdminUserPage() {
     }
   }
 
+  // initial load
   useEffect(() => {
     if (isLoading) return
+    if (!isHydrated) return
     if (!token) {
       setError("No token. Please login again.")
       setLoading(false)
       return
     }
-    load()
+    load({ nextPage: 1 })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, isLoading])
+  }, [token, isLoading, isHydrated])
+
+  const onSearchSubmit = async () => {
+    await load({ nextPage: 1, nextSearch: search })
+  }
 
   const onDelete = async (id: string, name: string) => {
     if (!token) return
@@ -75,20 +90,19 @@ export default function AdminUserPage() {
     setDeletingId(id)
     setError(null)
 
-    // optimistic UI
-    const prev = users
-    setUsers((cur) => cur.filter((u) => u._id !== id))
-
     try {
-      await apiAuthWithToken(token, `/admin/users/${id}`, { method: "DELETE" })
+      await adminUsersApi.remove(token, id)
+      // reload same page (but if last item deleted, go back a page safely)
+      const nextPage = Math.min(page, Math.max(1, (pagination.totalPages || 1)))
+      await load({ nextPage })
     } catch (e: any) {
-      // rollback if delete failed
-      setUsers(prev)
       setError(e.message || "Delete failed")
     } finally {
       setDeletingId(null)
     }
   }
+
+  const shownCount = useMemo(() => users.length, [users])
 
   return (
     <div className="space-y-6">
@@ -101,7 +115,7 @@ export default function AdminUserPage() {
 
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={load}
+            onClick={() => load()}
             className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800
                        shadow-sm transition hover:bg-gray-50 hover:shadow-md active:scale-[0.99]"
           >
@@ -110,7 +124,7 @@ export default function AdminUserPage() {
           </button>
 
           <Link
-            href="/admin/user/create"
+            href="/admin/users/create"
             className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white
                        shadow-sm transition hover:bg-emerald-700 hover:shadow-md active:scale-[0.99]"
           >
@@ -122,29 +136,53 @@ export default function AdminUserPage() {
 
       {/* Error */}
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      {/* Search */}
+      {/* Search + meta */}
       <div className="rounded-3xl border border-gray-200/70 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-md">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search by name, email, role..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSearchSubmit()
+              }}
+              placeholder="Search by name, email, contact, address..."
               className="w-full rounded-2xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm outline-none
                          focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
             />
           </div>
 
-          <div className="text-xs font-semibold text-gray-500">
-            Showing <span className="text-gray-900">{filtered.length}</span> /{" "}
-            <span className="text-gray-900">{users.length}</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onSearchSubmit}
+              className="rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              Search
+            </button>
+
+            <select
+              value={limit}
+              onChange={(e) => load({ nextPage: 1, nextLimit: Number(e.target.value) })}
+              className="rounded-2xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 outline-none
+                         focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
+            >
+              <option value={5}>5 / page</option>
+              <option value={10}>10 / page</option>
+              <option value={20}>20 / page</option>
+              <option value={50}>50 / page</option>
+            </select>
           </div>
+        </div>
+
+        <div className="mt-3 text-xs font-semibold text-gray-500">
+          Showing <span className="text-gray-900">{shownCount}</span> on page{" "}
+          <span className="text-gray-900">{pagination.page}</span> of{" "}
+          <span className="text-gray-900">{pagination.totalPages}</span> — Total:{" "}
+          <span className="text-gray-900">{pagination.total}</span>
         </div>
       </div>
 
@@ -158,10 +196,10 @@ export default function AdminUserPage() {
         <div className="divide-y divide-gray-100">
           {loading ? (
             <div className="px-5 py-8 text-sm text-gray-500">Loading users...</div>
-          ) : filtered.length === 0 ? (
+          ) : users.length === 0 ? (
             <div className="px-5 py-8 text-sm text-gray-500">No users found.</div>
           ) : (
-            filtered.map((u) => (
+            users.map((u) => (
               <div key={u._id} className="px-5 py-4 hover:bg-gray-50/60 transition">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   {/* Left */}
@@ -187,14 +225,10 @@ export default function AdminUserPage() {
                     {(u.contact || u.address) && (
                       <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-600">
                         {u.contact && (
-                          <span className="rounded-full border border-gray-200 bg-white px-3 py-1">
-                            {u.contact}
-                          </span>
+                          <span className="rounded-full border border-gray-200 bg-white px-3 py-1">{u.contact}</span>
                         )}
                         {u.address && (
-                          <span className="rounded-full border border-gray-200 bg-white px-3 py-1">
-                            {u.address}
-                          </span>
+                          <span className="rounded-full border border-gray-200 bg-white px-3 py-1">{u.address}</span>
                         )}
                       </div>
                     )}
@@ -203,7 +237,16 @@ export default function AdminUserPage() {
                   {/* Actions */}
                   <div className="flex shrink-0 items-center gap-2 sm:justify-end">
                     <Link
-                      href={`/admin/user/${u._id}`}
+                      href={`/admin/users/${u._id}`}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-800
+                                 shadow-sm transition hover:bg-gray-50 hover:shadow-md active:scale-[0.99]"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      View
+                    </Link>
+
+                    <Link
+                      href={`/admin/users/${u._id}/edit`}
                       className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-800
                                  shadow-sm transition hover:bg-gray-50 hover:shadow-md active:scale-[0.99]"
                     >
@@ -225,6 +268,34 @@ export default function AdminUserPage() {
               </div>
             ))
           )}
+        </div>
+
+        {/* Pagination footer */}
+        <div className="flex items-center justify-between border-t border-gray-200/70 px-5 py-4">
+          <button
+            onClick={() => canPrev && load({ nextPage: page - 1 })}
+            disabled={!canPrev || loading}
+            className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800
+                       hover:bg-gray-50 disabled:opacity-50"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Prev
+          </button>
+
+          <div className="text-sm font-semibold text-gray-700">
+            Page <span className="text-gray-900">{pagination.page}</span> /{" "}
+            <span className="text-gray-900">{pagination.totalPages}</span>
+          </div>
+
+          <button
+            onClick={() => canNext && load({ nextPage: page + 1 })}
+            disabled={!canNext || loading}
+            className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800
+                       hover:bg-gray-50 disabled:opacity-50"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       </div>
 

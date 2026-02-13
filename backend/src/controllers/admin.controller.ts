@@ -26,7 +26,6 @@ export class AdminUsersController {
 
       const file = (req as any).file as Express.Multer.File | undefined
 
-      // pass optional profile_picture to service
       const created = await userService.createUserAsAdmin({
         ...parsed.data,
         profile_picture: file ? file.filename : null,
@@ -45,13 +44,19 @@ export class AdminUsersController {
     }
   }
 
-  // ✅ GET /api/admin/users
+  // ✅ GET /api/admin/users?page=1&limit=10&search=abc
   async getAllUsers(req: Request, res: Response) {
     try {
-      const users = await userService.getAllUsers()
+      const page = Math.max(1, parseInt(String(req.query.page || "1"), 10))
+      const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit || "10"), 10)))
+      const search = String(req.query.search || "").trim()
+
+      const result = await userService.getAllUsersPaginated({ page, limit, search })
+
       return res.status(200).json({
         success: true,
-        data: users.map((u: any) => safeUser(u)),
+        data: result.users.map((u: any) => safeUser(u)),
+        pagination: result.pagination,
       })
     } catch (error: any) {
       return res.status(error.statusCode ?? 500).json({

@@ -1,55 +1,85 @@
 "use client"
 
-import React from "react"
-
-import { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { Users, Shield, Activity, ChevronRight, UserRoundCog, Sparkles } from "lucide-react"
 import { useAuth } from "@/app/context/auth-contexts"
-import { apiAuthWithToken } from "@/app/lib/api-clients"
+import { adminUsersApi } from "@/app/lib/api-clients" // ✅ IMPORTANT: import this
 
 type UserT = {
   _id: string
   name: string
   email: string
-  role?: "user" | "admin" | string
+  role?: "user" | "admin" | string | string[]
 }
 
-type UsersResponse = { success: boolean; data: UserT[] }
+type UsersListResponse = {
+  success: boolean
+  data: UserT[]
+  pagination: { page: number; limit: number; total: number; totalPages: number }
+}
 
 export default function AdminDashboardPage() {
   const { token, isLoading } = useAuth()
 
-  const [users, setUsers] = useState<UserT[]>([])
+  const [totalUsers, setTotalUsers] = useState<number>(0)
+  const [adminCount, setAdminCount] = useState<number>(0)
   const [statsLoading, setStatsLoading] = useState(true)
   const [status, setStatus] = useState<"Healthy" | "Degraded">("Healthy")
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
 
   useEffect(() => {
     if (isLoading) return
+
     if (!token) {
+      setTotalUsers(0)
+      setAdminCount(0)
       setStatsLoading(false)
       setStatus("Degraded")
+      setUpdatedAt(new Date())
       return
     }
 
     let cancelled = false
+
+    const isAdminRole = (role: UserT["role"]) => {
+      if (!role) return false
+      if (Array.isArray(role)) return role.some((r) => String(r).toLowerCase() === "admin")
+      return String(role).toLowerCase() === "admin"
+    }
 
     ;(async () => {
       setStatsLoading(true)
       setStatus("Healthy")
 
       try {
-        const res = await apiAuthWithToken<UsersResponse>(token, "/admin/users")
+        // page size for stats scan (bigger = fewer requests)
+        const LIMIT = 100
+
+        // 1) Fetch first page to get totals
+        const first: UsersListResponse = await adminUsersApi.getAll(token, { page: 1, limit: LIMIT })
         if (cancelled) return
 
-        const list = Array.isArray(res.data) ? res.data : []
-        setUsers(list)
+        setTotalUsers(first.pagination?.total ?? first.data?.length ?? 0)
+
+        // 2) Count admins across all pages
+        let admins = (first.data ?? []).filter((u) => isAdminRole(u.role)).length
+        const totalPages = first.pagination?.totalPages ?? 1
+
+        for (let page = 2; page <= totalPages; page++) {
+          const next: UsersListResponse = await adminUsersApi.getAll(token, { page, limit: LIMIT })
+          if (cancelled) return
+          admins += (next.data ?? []).filter((u) => isAdminRole(u.role)).length
+        }
+
+        setAdminCount(admins)
         setUpdatedAt(new Date())
         setStatus("Healthy")
-      } catch {
+      } catch (err: any) {
+        console.error("Failed to load admin stats:", err?.message || err)
         if (cancelled) return
-        setUsers([])
+        setTotalUsers(0)
+        setAdminCount(0)
         setUpdatedAt(new Date())
         setStatus("Degraded")
       } finally {
@@ -61,9 +91,6 @@ export default function AdminDashboardPage() {
       cancelled = true
     }
   }, [token, isLoading])
-
-  const totalUsers = users.length
-  const totalAdmins = useMemo(() => users.filter((u) => u.role === "admin").length, [users])
 
   const updatedLabel = updatedAt
     ? `Updated ${updatedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
@@ -122,7 +149,7 @@ export default function AdminDashboardPage() {
         />
         <Stat
           title="Admins"
-          value={statsLoading ? "—" : String(totalAdmins)}
+          value={statsLoading ? "—" : String(adminCount)}
           icon={<Shield className="h-[18px] w-[18px]" />}
           tone="slate"
           badge={statsLoading ? "Loading" : undefined}
@@ -141,7 +168,7 @@ export default function AdminDashboardPage() {
       {/* Panels */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 rounded-2xl border border-slate-200/80 bg-white p-7 shadow-sm sm:p-8">
-          <div className="flex items-start justify-between gap-4 mb-6 border-b border-slate-100 pb-6">
+          <div className="mb-6 flex items-start justify-between gap-4 border-b border-slate-100 pb-6">
             <div>
               <h3 className="text-lg font-bold tracking-tight text-slate-900">Quick Actions</h3>
               <p className="mt-1 text-sm text-slate-600">Most used admin actions in one place</p>
@@ -169,7 +196,7 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-200/80 bg-white p-7 shadow-sm sm:p-8">
-          <div className="flex items-start justify-between gap-4 mb-6 border-b border-slate-100 pb-6">
+          <div className="mb-6 flex items-start justify-between gap-4 border-b border-slate-100 pb-6">
             <div>
               <h3 className="text-lg font-bold tracking-tight text-slate-900">Security</h3>
               <p className="mt-1 text-sm text-slate-600">Admin session verification status</p>
