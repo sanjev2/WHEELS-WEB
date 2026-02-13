@@ -1,10 +1,18 @@
 **note_modulers/
 
+# dependencies
 node_modules/
+**/node_modules/
+
+# environment files
 .env
-.env.test
+.env.*
+!.env.example
+
+# build outputs
 dist/
 build/
 coverage/
-logs/
+
+# logs
 *.log
