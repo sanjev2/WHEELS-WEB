@@ -1,1 +1,10 @@
 **note_modulers/
+
+node_modules/
+.env
+.env.test
+dist/
+build/
+coverage/
+logs/
+*.log

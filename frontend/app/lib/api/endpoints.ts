@@ -9,6 +9,11 @@ export const endpoints = {
   uploadProfile: `${API_BASE}/auth/upload-profile-picture`,
   adminVerify: `${API_BASE}/auth/admin/verify`,
 
+  // ✅ forgot password
+  forgotPassword: `${API_BASE}/auth/forgot-password`,
+  verifyResetCode: `${API_BASE}/auth/verify-reset-code`,
+  resetPassword: `${API_BASE}/auth/reset-password`,
+
   // admin users
   adminUsers: `${API_BASE}/admin/users`,
   adminUserById: (id: string) => `${API_BASE}/admin/users/${id}`,

@@ -14,6 +14,7 @@ function safeUser(user: any) {
 }
 
 export class AuthController {
+  // ✅ POST /api/auth/signup
   async register(req: Request, res: Response) {
     try {
       const parsedData = CreateUserDTO.safeParse(req.body)
@@ -38,6 +39,7 @@ export class AuthController {
     }
   }
 
+  // ✅ POST /api/auth/login
   async login(req: Request, res: Response) {
     try {
       const parsedData = LoginUserDTO.safeParse(req.body)
@@ -63,6 +65,7 @@ export class AuthController {
     }
   }
 
+  // ✅ GET /api/auth/me
   async me(req: AuthRequest, res: Response) {
     try {
       const userId = req.user?.userId
@@ -82,6 +85,7 @@ export class AuthController {
     }
   }
 
+  // ✅ POST /api/auth/upload-profile-picture
   async uploadProfilePicture(req: AuthRequest, res: Response) {
     try {
       const userId = req.user?.userId
@@ -99,7 +103,6 @@ export class AuthController {
         message: "Profile picture uploaded successfully",
         data: {
           filename: file.filename,
-          // ✅ FIXED: your upload middleware uses /public/profile_photo
           url: `/public/profile_photo/${file.filename}`,
           user: safeUser(updatedUser),
         },
@@ -112,7 +115,7 @@ export class AuthController {
     }
   }
 
-  // ✅ verify admin code before opening admin dashboard
+  // ✅ POST /api/auth/admin/verify
   async verifyAdmin(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" })
@@ -131,7 +134,7 @@ export class AuthController {
     }
   }
 
-  // ✅ PUT /api/auth/:id (self OR admin) + supports Multer
+  // ✅ PUT /api/auth/:id (self OR admin)
   async updateUser(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" })
@@ -147,18 +150,15 @@ export class AuthController {
         return res.status(403).json({ success: false, message: "Forbidden" })
       }
 
-      // ✅ Merge body + optional file
       const updates: any = { ...req.body }
 
       const file = (req as any).file as Express.Multer.File | undefined
       if (file) updates.profile_picture = file.filename
 
-      // ✅ FormData often sends empty strings; remove them so you don't overwrite with ""
       Object.keys(updates).forEach((k) => {
         if (updates[k] === "") delete updates[k]
       })
 
-      // ✅ If nothing to update
       if (Object.keys(updates).length === 0) {
         return res.status(400).json({ success: false, message: "No valid fields to update" })
       }
@@ -169,6 +169,64 @@ export class AuthController {
         success: true,
         message: "User updated",
         data: safeUser(updated),
+      })
+    } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      })
+    }
+  }
+
+  // ✅ POST /api/auth/forgot-password
+  async forgotPassword(req: Request, res: Response) {
+    try {
+      const email = String(req.body?.email || "")
+      const r = await userService.requestPasswordReset(email)
+
+      return res.status(200).json({
+        success: true,
+        message: "If the email exists, a verification code has been sent.",
+        data: r,
+      })
+    } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      })
+    }
+  }
+
+  // ✅ POST /api/auth/verify-reset-code
+  async verifyResetCode(req: Request, res: Response) {
+    try {
+      const email = String(req.body?.email || "")
+      const code = String(req.body?.code || "")
+      const r = await userService.verifyPasswordResetCode(email, code)
+
+      return res.status(200).json({
+        success: true,
+        message: "Code verified",
+        data: r,
+      })
+    } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      })
+    }
+  }
+
+  // ✅ POST /api/auth/reset-password
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const resetToken = String(req.body?.resetToken || "")
+      const newPassword = String(req.body?.newPassword || "")
+      await userService.resetPasswordWithToken(resetToken, newPassword)
+
+      return res.status(200).json({
+        success: true,
+        message: "Password reset successful",
       })
     } catch (error: any) {
       return res.status(error.statusCode ?? 500).json({

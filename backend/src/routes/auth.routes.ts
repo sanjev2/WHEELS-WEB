@@ -38,6 +38,13 @@ router.put(
   authMiddleware,
   maybeUploadProfilePicture, // ✅ important change
   (req, res) => controller.updateUser(req as any, res)
+
+
 )
+
+router.post("/forgot-password", (req, res) => controller.forgotPassword(req, res))
+router.post("/verify-reset-code", (req, res) => controller.verifyResetCode(req, res))
+router.post("/reset-password", (req, res) => controller.resetPassword(req, res))
+
 
 export default router

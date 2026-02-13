@@ -65,6 +65,13 @@ export function LoginForm() {
         {errors.password && <p className="text-xs text-red-600">{errors.password.message}</p>}
       </div>
 
+      <div className="text-right">
+  <Link href="/auth/forgot-password" className="text-xs font-semibold text-[#5A9C41] hover:underline">
+    Forgot password?
+  </Link>
+</div>
+
+
       <button
         type="submit"
         disabled={isSubmitting || pending || isLoading}
