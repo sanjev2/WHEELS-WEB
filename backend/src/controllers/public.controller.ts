@@ -2,7 +2,9 @@ import type { Request, Response } from "express"
 import { VEHICLE_CATEGORIES } from "../types/vehicle-category.type"
 import { VehicleService } from "../services/vehicle.service"
 import { PackageService } from "../services/package.service"
+import { ProviderService } from "../services/provider.service"
 
+const providerService = new ProviderService()
 const vehicleService = new VehicleService()
 const packageService = new PackageService()
 
@@ -17,9 +19,19 @@ export class PublicController {
     return res.status(200).json({ success: true, data })
   }
 
+  async listProviders(req: Request, res: Response) {
+  const category = req.query.category as string | undefined
+  const data = await providerService.listPublic(category)
+  return res.status(200).json({ success: true, data })
+}
+
   async listPackages(req: Request, res: Response) {
     const category = req.query.category as string | undefined
     const data = await packageService.getPublicPackages(category)
     return res.status(200).json({ success: true, data })
   }
 }
+
+
+
+// inside class:

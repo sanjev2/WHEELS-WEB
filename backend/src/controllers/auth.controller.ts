@@ -235,4 +235,27 @@ export class AuthController {
       })
     }
   }
+
+    // ✅ POST /api/auth/change-password
+  async changePassword(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.user?.userId
+      if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" })
+
+      const currentPassword = String(req.body?.currentPassword || "")
+      const newPassword = String(req.body?.newPassword || "")
+
+      await userService.changePassword(userId, currentPassword, newPassword)
+
+      return res.status(200).json({
+        success: true,
+        message: "Password updated successfully",
+      })
+    } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      })
+    }
+  }
 }

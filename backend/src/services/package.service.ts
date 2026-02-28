@@ -1,35 +1,65 @@
-import { HttpError } from "../errors/http-error"
-import { PackageRepository } from "../repositories/package.repository"
-
-const repo = new PackageRepository()
+import { PackageModel } from "../models/package.model"
+import type { AdminCreatePackageInput, AdminUpdatePackageInput } from "../dtos/package.dto"
 
 export class PackageService {
-  createPackage(data: any) {
-    return repo.create({
-      ...data,
-      isActive: data.isActive ?? true,
+  async createPackage(payload: AdminCreatePackageInput) {
+    const created = await PackageModel.create({
+      title: payload.title,
+      description: payload.description ?? null,
+      category: payload.category,
+      price: payload.price,
+
+      durationMins: payload.durationMins ?? null,
+
+      // ✅ array
+      engineOilTypes: payload.engineOilTypes ?? [],
+
+      services: payload.services ?? [],
+      addons: payload.addons ?? [],
+
+      isActive: payload.isActive ?? true,
     })
+
+    return created
   }
 
-  getAdminPackages() {
-    return repo.findAll({})
+  async getAdminPackages() {
+    return PackageModel.find().sort({ createdAt: -1 })
   }
 
-  getPublicPackages(category?: string) {
+  async getPublicPackages(category?: string) {
     const filter: any = { isActive: true }
     if (category) filter.category = category
-    return repo.findAll(filter)
+    return PackageModel.find(filter).sort({ createdAt: -1 })
   }
 
-  async updatePackage(id: string, updates: any) {
-    const updated = await repo.updateById(id, updates)
-    if (!updated) throw new HttpError(404, "Package not found")
+  async updatePackage(id: string, payload: AdminUpdatePackageInput) {
+    const updated = await PackageModel.findByIdAndUpdate(
+      id,
+      {
+        title: payload.title,
+        description: payload.description ?? null,
+        category: payload.category,
+        price: payload.price,
+
+        durationMins: payload.durationMins ?? null,
+
+        // ✅ array
+        engineOilTypes: payload.engineOilTypes ?? [],
+
+        services: payload.services ?? [],
+        addons: payload.addons ?? [],
+
+        isActive: payload.isActive ?? true,
+      },
+      { new: true }
+    )
+
+    if (!updated) throw new Error("Package not found")
     return updated
   }
 
   async deletePackage(id: string) {
-    const deleted = await repo.deleteById(id)
-    if (!deleted) throw new HttpError(404, "Package not found")
-    return true
+    await PackageModel.findByIdAndDelete(id)
   }
 }

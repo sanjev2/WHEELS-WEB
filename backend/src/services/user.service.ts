@@ -128,6 +128,41 @@ export class UserService {
   }
 
   // ============================================================
+  // ✅ CHANGE PASSWORD (LOGGED-IN SETTINGS FLOW)
+  // ============================================================
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const uid = String(userId || "").trim()
+    const current = String(currentPassword || "").trim()
+    const next = String(newPassword || "").trim()
+
+    if (!uid) throw new HttpError(401, "Unauthorized")
+    if (!current || !next) throw new HttpError(400, "Current password and new password are required")
+    if (next.length < 6) throw new HttpError(400, "Password must be at least 6 characters")
+    if (current === next) throw new HttpError(400, "New password must be different from current password")
+
+    const user = await userRepository.getUserById(uid)
+    if (!user) throw new HttpError(404, "User not found")
+
+    const valid = await bcryptjs.compare(current, user.password)
+    if (!valid) throw new HttpError(401, "Current password is incorrect")
+
+    const hashed = await bcryptjs.hash(next, 10)
+
+    const updated = await userRepository.updateUserPasswordById(uid, hashed)
+    if (!updated) throw new HttpError(404, "User not found")
+
+    // ✅ optional: clean reset fields (good practice)
+    await userRepository.updateResetFieldsByEmail(user.email, {
+      reset_token_hash: null,
+      reset_token_expires_at: null,
+      reset_code_hash: null,
+      reset_code_attempts: 0,
+      reset_code_expires_at: null,
+      reset_last_sent_at: null,
+    })
+  }
+
+  // ============================================================
   // ✅ FORGOT PASSWORD FLOW
   // ============================================================
 
@@ -140,7 +175,6 @@ export class UserService {
 
     const now = new Date()
 
-    // ✅ IMPORTANT: use reset_last_sent_at (matches your model)
     const lastSent = (user as any).reset_last_sent_at as Date | undefined
     if (lastSent) {
       const diffMs = now.getTime() - new Date(lastSent).getTime()
@@ -158,7 +192,7 @@ export class UserService {
       reset_code_hash: codeHash,
       reset_code_attempts: 0,
       reset_code_expires_at: new Date(now.getTime() + 10 * 60 * 1000),
-      reset_last_sent_at: now, // ✅ matches your model
+      reset_last_sent_at: now,
       reset_token_hash: null,
       reset_token_expires_at: null,
     })
@@ -232,7 +266,7 @@ export class UserService {
       reset_code_hash: null,
       reset_code_attempts: 0,
       reset_code_expires_at: null,
-      reset_last_sent_at: null, // ✅ matches your model
+      reset_last_sent_at: null,
     })
   }
 
