@@ -66,4 +66,11 @@ export const authApi = {
       body: JSON.stringify({ resetToken, newPassword }),
     })
   },
+
+  changePassword: async (token: string, currentPassword: string, newPassword: string) => {
+  return httpAuthJson<any>(endpoints.changePassword, token, {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+},
 }

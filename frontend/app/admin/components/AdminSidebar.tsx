@@ -2,17 +2,69 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, UserRound, LogOut, ShieldCheck } from "lucide-react"
+import {
+  LayoutDashboard,
+  UserRound,
+  LogOut,
+  ShieldCheck,
+  MapPin,
+  ClipboardList,
+} from "lucide-react"
 import { clearAdminVerified } from "@/app/lib/admin-session"
 
-const nav = [
+const navMain = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Users", href: "/admin/user", icon: UserRound },
+]
+
+const navManagement = [
+  { name: "Providers", href: "/admin/dashboard/providers", icon: MapPin },
+  { name: "Orders", href: "/admin/dashboard/orders", icon: ClipboardList },
 ]
 
 export default function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+
+  const renderNav = (title: string, items: typeof navMain) => (
+    <div className="mb-6">
+      <div className="mb-3.5 px-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+        {title}
+      </div>
+      <div className="space-y-1.5">
+        {items.map((item) => {
+          const Icon = item.icon
+          const active = pathname === item.href || pathname.startsWith(item.href + "/")
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={[
+                "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-200",
+                active
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-700 hover:bg-slate-50 hover:text-slate-900",
+              ].join(" ")}
+            >
+              <span
+                className={[
+                  "flex h-8 w-8 items-center justify-center rounded-lg border transition-colors",
+                  active
+                    ? "border-emerald-500 bg-emerald-500/20 text-white"
+                    : "border-slate-200 bg-white text-slate-600 group-hover:border-slate-300 group-hover:bg-slate-50",
+                ].join(" ")}
+              >
+                <Icon className="h-[16px] w-[16px]" />
+              </span>
+
+              <span className="flex-1">{item.name}</span>
+            </Link>
+          )
+        })}
+      </div>
+    </div>
+  )
 
   return (
     <aside className="sticky top-0 h-screen w-[280px] shrink-0 border-r border-slate-200/80 bg-white shadow-sm flex flex-col">
@@ -38,43 +90,9 @@ export default function AdminSidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-4">
-        <div className="mb-3.5 px-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-          Navigation
-        </div>
-
-        <div className="space-y-1.5">
-          {nav.map((item) => {
-            const Icon = item.icon
-            const active = pathname === item.href || pathname.startsWith(item.href + "/")
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={[
-                  "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-200",
-                  active
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-900",
-                ].join(" ")}
-              >
-                <span
-                  className={[
-                    "flex h-8 w-8 items-center justify-center rounded-lg border transition-colors",
-                    active
-                      ? "border-emerald-500 bg-emerald-500/20 text-white"
-                      : "border-slate-200 bg-white text-slate-600 group-hover:border-slate-300 group-hover:bg-slate-50",
-                  ].join(" ")}
-                >
-                  <Icon className="h-[16px] w-[16px]" />
-                </span>
-
-                <span className="flex-1">{item.name}</span>
-              </Link>
-            )
-          })}
-        </div>
+      <nav className="flex-1 px-4 overflow-auto">
+        {renderNav("Navigation", navMain)}
+        {renderNav("Management", navManagement)}
       </nav>
 
       {/* Exit */}

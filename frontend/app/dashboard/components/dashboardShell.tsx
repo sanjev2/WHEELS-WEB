@@ -22,6 +22,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const router = useRouter()
   const pathname = usePathname()
   const { logout, token, isHydrated } = useAuth()
+  const handleLogout = () => {
+  logout()
+  window.location.replace("/auth/login")
+}
 
   const [adminOpen, setAdminOpen] = useState(false)
   const [adminCode, setAdminCode] = useState("")
@@ -181,7 +185,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 </button>
 
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700
                              hover:bg-slate-50 hover:border-slate-300 transition-colors"
                 >
