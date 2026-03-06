@@ -6,8 +6,6 @@ import { uploadProfilePicture } from "../middleware/upload.middleware"
 const router = Router()
 const controller = new AuthController()
 
-
-// ✅ only run multer when content-type is multipart/form-data
 const maybeUploadProfilePicture = (req: any, res: any, next: any) => {
   const ct = req.headers["content-type"] || ""
   if (ct.includes("multipart/form-data")) {
@@ -33,11 +31,10 @@ router.post(
 
 router.post("/admin/verify", authMiddleware, (req, res) => controller.verifyAdmin(req as any, res))
 
-// ✅ FIXED: PUT supports JSON updates AND multipart updates (with image)
 router.put(
   "/:id",
   authMiddleware,
-  maybeUploadProfilePicture, // ✅ important change
+  maybeUploadProfilePicture, 
   (req, res) => controller.updateUser(req as any, res)
 
 

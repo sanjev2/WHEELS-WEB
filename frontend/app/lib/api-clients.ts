@@ -14,7 +14,6 @@ export async function apiAuthWithToken<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  // ✅ support full URL OR relative path
   const url = path.startsWith("http") ? path : `${API}${path}`
 
   const res = await fetch(url, {
@@ -31,7 +30,6 @@ export async function apiAuthWithToken<T>(
   const { raw, data } = await parse(res)
 
   if (!res.ok) {
-    // ✅ include status in error for easier debugging
     const msg = data?.message || raw?.slice(0, 300) || `Request failed (${res.status})`
     throw new Error(msg)
   }
@@ -40,7 +38,6 @@ export async function apiAuthWithToken<T>(
 }
 
 export const adminUsersApi = {
-  // ✅ supports page/limit/search
   getAll: (token: string, params?: { page?: number; limit?: number; search?: string }) => {
     const page = params?.page ?? 1
     const limit = params?.limit ?? 50
@@ -51,7 +48,6 @@ export const adminUsersApi = {
     qs.set("limit", String(limit))
     if (search) qs.set("search", search)
 
-    // ✅ IMPORTANT: pass RELATIVE path, not full URL
     return apiAuthWithToken<{
       success: boolean
       data: any[]

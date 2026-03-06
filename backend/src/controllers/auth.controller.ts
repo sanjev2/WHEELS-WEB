@@ -14,7 +14,6 @@ function safeUser(user: any) {
 }
 
 export class AuthController {
-  // ✅ POST /api/auth/signup
   async register(req: Request, res: Response) {
     try {
       const parsedData = CreateUserDTO.safeParse(req.body)
@@ -39,7 +38,6 @@ export class AuthController {
     }
   }
 
-  // ✅ POST /api/auth/login
   async login(req: Request, res: Response) {
     try {
       const parsedData = LoginUserDTO.safeParse(req.body)
@@ -65,7 +63,6 @@ export class AuthController {
     }
   }
 
-  // ✅ GET /api/auth/me
   async me(req: AuthRequest, res: Response) {
     try {
       const userId = req.user?.userId
@@ -85,7 +82,6 @@ export class AuthController {
     }
   }
 
-  // ✅ POST /api/auth/upload-profile-picture
   async uploadProfilePicture(req: AuthRequest, res: Response) {
     try {
       const userId = req.user?.userId
@@ -115,7 +111,6 @@ export class AuthController {
     }
   }
 
-  // ✅ POST /api/auth/admin/verify
   async verifyAdmin(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" })
@@ -134,7 +129,6 @@ export class AuthController {
     }
   }
 
-  // ✅ PUT /api/auth/:id (self OR admin)
   async updateUser(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" })
@@ -178,7 +172,6 @@ export class AuthController {
     }
   }
 
-  // ✅ POST /api/auth/forgot-password
   async forgotPassword(req: Request, res: Response) {
     try {
       const email = String(req.body?.email || "")
@@ -197,7 +190,6 @@ export class AuthController {
     }
   }
 
-  // ✅ POST /api/auth/verify-reset-code
   async verifyResetCode(req: Request, res: Response) {
     try {
       const email = String(req.body?.email || "")
@@ -217,7 +209,6 @@ export class AuthController {
     }
   }
 
-  // ✅ POST /api/auth/reset-password
   async resetPassword(req: Request, res: Response) {
     try {
       const resetToken = String(req.body?.resetToken || "")
@@ -236,7 +227,6 @@ export class AuthController {
     }
   }
 
-    // ✅ POST /api/auth/change-password
   async changePassword(req: AuthRequest, res: Response) {
     try {
       const userId = req.user?.userId

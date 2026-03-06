@@ -11,7 +11,6 @@ export const ORDER_STATUSES = [
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number]
 
-// ✅ NEW: order client types
 export const ORDER_CLIENTS = ["web", "mobile"] as const
 export type OrderClient = (typeof ORDER_CLIENTS)[number]
 
@@ -43,7 +42,6 @@ const OrderSchema = new Schema(
       required: true,
     },
 
-    // ✅ NEW: store who initiated payment (web/mobile)
     client: {
       type: String,
       enum: ORDER_CLIENTS,

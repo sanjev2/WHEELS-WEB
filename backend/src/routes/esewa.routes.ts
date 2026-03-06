@@ -114,11 +114,9 @@ router.post("/initiate", authMiddleware, async (req: AuthRequest, res) => {
     const signed_field_names = "total_amount,transaction_uuid,product_code"
     const signature = generateRequestSignature(total_amount, transaction_uuid, product_code)
 
-    // ✅ callback URLs must be reachable from device
     const success_url = `${API_BASE_URL}/api/esewa/success`
     const failure_url = `${API_BASE_URL}/api/esewa/failure`
 
-    // ✅ Create PENDING order
     const createdOrder = await OrderModel.create({
       user: new mongoose.Types.ObjectId(userId),
       car: new mongoose.Types.ObjectId(carId),
@@ -142,8 +140,6 @@ router.post("/initiate", authMiddleware, async (req: AuthRequest, res) => {
 
       transaction_uuid: transaction_uuid,
       transaction_code: null,
-
-      // ✅ NEW: store client so success/failure can redirect properly
       client,
     })
 
@@ -185,10 +181,6 @@ router.post("/initiate", authMiddleware, async (req: AuthRequest, res) => {
   console.log("✅ Using API_BASE_URL:", API_BASE_URL)
 })
 
-// ============================================================
-// ✅ SUCCESS CALLBACK
-// GET /api/esewa/success?data=base64
-// ============================================================
 router.get("/success", async (req, res) => {
   try {
     const data = String(req.query?.data || "")
@@ -216,10 +208,10 @@ router.get("/success", async (req, res) => {
 
     // 2) find order first
     const existing = await OrderModel.findOne({ transaction_uuid })
-    console.log("✅ Order found by transaction_uuid?", !!existing)
+    console.log("Order found by transaction_uuid?", !!existing)
 
     if (!existing) {
-      console.log("❌ ORDER_NOT_FOUND for transaction_uuid:", transaction_uuid)
+      console.log("ORDER_NOT_FOUND for transaction_uuid:", transaction_uuid)
       return res.redirect(redirectByClient("web", "failure", { status: "ORDER_NOT_FOUND" }))
     }
 
@@ -235,14 +227,14 @@ router.get("/success", async (req, res) => {
 
       const { data: statusData } = await axios.get(url.toString(), { timeout: 10000 })
       finalStatus = String(statusData?.status || "UNKNOWN")
-      console.log("✅ Status check result:", statusData)
+      console.log("Status check result:", statusData)
     } catch (err: any) {
-      console.log("⚠️ Status check failed, using payload.status fallback:", err?.message)
+      console.log("Status check failed, using payload.status fallback:", err?.message)
       finalStatus = payloadStatus || "STATUS_CHECK_FAILED"
     }
 
     if (finalStatus !== "COMPLETE") {
-      console.log("❌ Payment not COMPLETE:", finalStatus)
+      console.log("Payment not COMPLETE:", finalStatus)
       return res.redirect(redirectByClient(client, "failure", { status: finalStatus }))
     }
 
@@ -252,23 +244,17 @@ router.get("/success", async (req, res) => {
     ;(existing as any).transaction_code = transaction_code || null
     await existing.save()
 
-    console.log("✅ Order marked PAID:", existing._id.toString())
+    console.log("Order marked PAID:", existing._id.toString())
 
-    // ✅ redirect based on client
     return res.redirect(redirectByClient(client, "success", { orderId: existing._id.toString() }))
   } catch (e: any) {
-    console.log("❌ ESEWA SUCCESS ERROR:", e?.message)
+    console.log("ESEWA SUCCESS ERROR:", e?.message)
     return res.redirect(redirectByClient("web", "failure", { status: "SERVER_ERROR" }))
   }
 })
 
-// ============================================================
-// FAILURE CALLBACK
-// ============================================================
 router.get("/failure", async (req, res) => {
-  // If you pass transaction_uuid in failure_url later, you can lookup order and redirect properly.
-  // For now, mobile will still be handled because flutter intercepts wheels://payment/failure if we use it.
-  // But we don't know client here, so we default to web.
+
   return res.redirect(redirectByClient("web", "failure", { status: "FAILED" }))
 })
 

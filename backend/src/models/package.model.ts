@@ -19,7 +19,6 @@ const PackageSchema = new Schema(
 
     durationMins: { type: Number, default: null, min: 0 },
 
-    // ✅ CHANGED: allow BOTH types (array)
     engineOilTypes: {
       type: [String],
       enum: ENGINE_OIL_TYPES,

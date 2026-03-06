@@ -136,7 +136,7 @@ export default function SettingsPage() {
     id="confirmNewPassword"
     type="password"
     autoComplete="new-password"
-    aria-label="Confirm New Password"   // ✅ makes getByLabelText(/confirm new password/i) pass
+    aria-label="Confirm New Password"  
     className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-200"
     placeholder="Confirm new password"
     {...form.register("confirmNewPassword")}

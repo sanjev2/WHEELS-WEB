@@ -11,7 +11,6 @@ export class PackageService {
 
       durationMins: payload.durationMins ?? null,
 
-      // ✅ array
       engineOilTypes: payload.engineOilTypes ?? [],
 
       services: payload.services ?? [],
@@ -44,7 +43,7 @@ export class PackageService {
 
         durationMins: payload.durationMins ?? null,
 
-        // ✅ array
+
         engineOilTypes: payload.engineOilTypes ?? [],
 
         services: payload.services ?? [],

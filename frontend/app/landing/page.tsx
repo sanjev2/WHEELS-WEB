@@ -11,7 +11,6 @@ export default function Landing() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
 
-  // ✅ SAFE UI ONLY: used for scroll-reveal (no functional behavior changes)
   const rootRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -22,7 +21,6 @@ export default function Landing() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  // ✅ SAFE UI ONLY: smooth reveal animations; respects prefers-reduced-motion
   useEffect(() => {
     const root = rootRef.current
     if (!root) return
@@ -66,12 +64,7 @@ export default function Landing() {
     }
   }
 
-  /**
-   * ✅ IMPORTANT:
-   * Set this to your actual provided asset path (public folder recommended).
-   * Example: "/assets/spinning-wheel.png"
-   * This is UI-only and does not affect functionality.
-   */
+
   const WHEEL_SRC = "/images/spin2.png"
 
   return (
@@ -130,14 +123,11 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section className="landing-hero">
-        {/* ✅ UI-only premium background lighting layers */}
         <div className="hero-decoration hero-deco-1" />
         <div className="hero-decoration hero-deco-2" />
         <div className="hero-grid-overlay" aria-hidden="true" />
 
-        {/* ✅ UI-only: hero depth stage (perspective) */}
         <div className="hero-stage">
-          {/* ✅ Wheel visual: does not block interactions */}
           <div className="hero-wheel-wrap" aria-hidden="true">
             <div className="hero-wheel-glow" />
             <img className="hero-wheel" src={WHEEL_SRC} alt="" />
@@ -161,7 +151,6 @@ export default function Landing() {
               </button>
             </div>
 
-            {/* ✅ UI-only: subtle “trust” strip (no new content/actions) */}
             <div className="hero-trust" data-reveal>
               <div className="trust-pill">24/7 Support</div>
               <div className="trust-pill">Verified Technicians</div>

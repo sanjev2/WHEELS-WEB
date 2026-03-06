@@ -32,7 +32,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [adminLoading, setAdminLoading] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
 
-  // ✅ Redirect ONLY in effect (never in render)
   useEffect(() => {
     if (!isHydrated) return
     if (!token) router.replace("/auth/login")
@@ -97,7 +96,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   }
 
-  // ✅ During hydration or missing token, keep UI stable (do NOT render dashboard UI)
   if (!isHydrated || !token) {
     return (
       <div className="min-h-screen grid place-items-center bg-slate-50">
