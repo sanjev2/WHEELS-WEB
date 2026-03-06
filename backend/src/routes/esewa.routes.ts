@@ -4,6 +4,7 @@ import axios from "axios"
 import mongoose from "mongoose"
 import { authMiddleware, type AuthRequest } from "../middleware/auth.middleware"
 import { OrderModel } from "../models/order.model"
+import { API_BASE_URL, APP_BASE_URL, MOBILE_DEEP_LINK_BASE } from "../config"
 
 const router = Router()
 
@@ -12,8 +13,15 @@ const ESEWA_ENV = process.env.ESEWA_ENV || "uat"
 const ESEWA_PRODUCT_CODE = process.env.ESEWA_PRODUCT_CODE || "EPAYTEST"
 const ESEWA_SECRET_KEY = process.env.ESEWA_SECRET_KEY || "8gBm/:&EnhH.1/q"
 
-const APP_BASE_URL = process.env.APP_BASE_URL || "http://localhost:3000"
-const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:5000"
+// ✅ Website base URL (web redirects go here)
+// const APP_BASE_URL = process.env.APP_BASE_URL || "http://localhost:3000"
+
+// ✅ API base URL (eSewa callback hits this)
+// // IMPORTANT: do NOT keep localhost here for mobile testing
+// const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:5000"
+
+// ✅ Mobile deep link base
+// const MOBILE_DEEP_LINK_BASE = process.env.MOBILE_DEEP_LINK_BASE || "wheels://payment"
 
 const ESEWA_FORM_URL =
   ESEWA_ENV === "prod"
@@ -50,6 +58,23 @@ function decodeEsewaData(dataB64: string) {
   return JSON.parse(json)
 }
 
+function redirectByClient(client: string, kind: "success" | "failure", params?: Record<string, string>) {
+  const q = new URLSearchParams(params || {}).toString()
+
+  // mobile -> deep link
+  if (client === "mobile") {
+    return `${MOBILE_DEEP_LINK_BASE}/${kind}${q ? `?${q}` : ""}`
+  }
+
+  // web -> website routes
+  if (kind === "success") {
+    return `${APP_BASE_URL}/dashboard/orders?paid=1`
+  }
+  // failure
+  const status = params?.status ? encodeURIComponent(params.status) : "FAILED"
+  return `${APP_BASE_URL}/dashboard/services/payment?status=${status}`
+}
+
 // ============================================================
 // ✅ INITIATE PAYMENT (AUTH REQUIRED)
 // POST /api/esewa/initiate
@@ -62,6 +87,9 @@ router.post("/initiate", authMiddleware, async (req: AuthRequest, res) => {
     const totalAmount = String(req.body?.total_amount || "").trim()
     const booking = req.body?.booking
 
+    // ✅ IMPORTANT: mobile will send client="mobile"
+    const client = String(req.body?.client || "web").toLowerCase() // "mobile" | "web"
+
     if (!totalAmount) return res.status(400).json({ success: false, message: "total_amount is required" })
     if (!booking) return res.status(400).json({ success: false, message: "booking is required" })
 
@@ -73,6 +101,7 @@ router.post("/initiate", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(400).json({ success: false, message: "booking missing carId/packageId/providerId" })
     }
 
+    console.log("API_BASE_URL =", API_BASE_URL)
     const transaction_uuid = `ORD-${Date.now()}-${Math.floor(Math.random() * 10000)}`
     const product_code = ESEWA_PRODUCT_CODE
 
@@ -85,6 +114,7 @@ router.post("/initiate", authMiddleware, async (req: AuthRequest, res) => {
     const signed_field_names = "total_amount,transaction_uuid,product_code"
     const signature = generateRequestSignature(total_amount, transaction_uuid, product_code)
 
+    // ✅ callback URLs must be reachable from device
     const success_url = `${API_BASE_URL}/api/esewa/success`
     const failure_url = `${API_BASE_URL}/api/esewa/failure`
 
@@ -112,12 +142,18 @@ router.post("/initiate", authMiddleware, async (req: AuthRequest, res) => {
 
       transaction_uuid: transaction_uuid,
       transaction_code: null,
+
+      // ✅ NEW: store client so success/failure can redirect properly
+      client,
     })
 
     console.log("✅ ESEWA INITIATE: order created", {
       orderId: createdOrder._id.toString(),
       transaction_uuid,
       total_amount,
+      client,
+      success_url,
+      failure_url,
     })
 
     return res.json({
@@ -145,6 +181,8 @@ router.post("/initiate", authMiddleware, async (req: AuthRequest, res) => {
     console.error("❌ ESEWA INITIATE ERROR:", e?.message)
     return res.status(500).json({ success: false, message: e.message || "Internal Server Error" })
   }
+
+  console.log("✅ Using API_BASE_URL:", API_BASE_URL)
 })
 
 // ============================================================
@@ -156,18 +194,18 @@ router.get("/success", async (req, res) => {
     const data = String(req.query?.data || "")
     if (!data) {
       console.log("❌ ESEWA SUCCESS: missing data")
-      return res.redirect(`${APP_BASE_URL}/dashboard/services/payment?status=MISSING_DATA`)
+      // unknown client -> default web
+      return res.redirect(redirectByClient("web", "failure", { status: "MISSING_DATA" }))
     }
 
     const payload = decodeEsewaData(data)
-
     console.log("✅ ESEWA SUCCESS payload:", payload)
 
     // 1) verify signature
     const expectedSig = generateResponseSignature(payload)
     if (expectedSig !== payload.signature) {
       console.log("❌ ESEWA SUCCESS: bad signature")
-      return res.redirect(`${APP_BASE_URL}/dashboard/services/payment?status=BAD_SIGNATURE`)
+      return res.redirect(redirectByClient("web", "failure", { status: "BAD_SIGNATURE" }))
     }
 
     const product_code = String(payload.product_code || "")
@@ -182,8 +220,10 @@ router.get("/success", async (req, res) => {
 
     if (!existing) {
       console.log("❌ ORDER_NOT_FOUND for transaction_uuid:", transaction_uuid)
-      return res.redirect(`${APP_BASE_URL}/dashboard/services/payment?status=ORDER_NOT_FOUND`)
+      return res.redirect(redirectByClient("web", "failure", { status: "ORDER_NOT_FOUND" }))
     }
+
+    const client = String((existing as any).client || "web").toLowerCase()
 
     // 3) call status check (recommended)
     let finalStatus = "UNKNOWN"
@@ -195,17 +235,15 @@ router.get("/success", async (req, res) => {
 
       const { data: statusData } = await axios.get(url.toString(), { timeout: 10000 })
       finalStatus = String(statusData?.status || "UNKNOWN")
-
       console.log("✅ Status check result:", statusData)
     } catch (err: any) {
       console.log("⚠️ Status check failed, using payload.status fallback:", err?.message)
-      // fallback for testing: use payload status if status API fails
       finalStatus = payloadStatus || "STATUS_CHECK_FAILED"
     }
 
     if (finalStatus !== "COMPLETE") {
       console.log("❌ Payment not COMPLETE:", finalStatus)
-      return res.redirect(`${APP_BASE_URL}/dashboard/services/payment?status=${encodeURIComponent(finalStatus)}`)
+      return res.redirect(redirectByClient(client, "failure", { status: finalStatus }))
     }
 
     // 4) mark PAID
@@ -216,18 +254,22 @@ router.get("/success", async (req, res) => {
 
     console.log("✅ Order marked PAID:", existing._id.toString())
 
-    return res.redirect(`${APP_BASE_URL}/dashboard/orders?paid=1`)
+    // ✅ redirect based on client
+    return res.redirect(redirectByClient(client, "success", { orderId: existing._id.toString() }))
   } catch (e: any) {
     console.log("❌ ESEWA SUCCESS ERROR:", e?.message)
-    return res.redirect(`${APP_BASE_URL}/dashboard/services/payment?status=SERVER_ERROR`)
+    return res.redirect(redirectByClient("web", "failure", { status: "SERVER_ERROR" }))
   }
 })
 
 // ============================================================
 // FAILURE CALLBACK
 // ============================================================
-router.get("/failure", async (_req, res) => {
-  return res.redirect(`${APP_BASE_URL}/dashboard/services/payment?status=FAILED`)
+router.get("/failure", async (req, res) => {
+  // If you pass transaction_uuid in failure_url later, you can lookup order and redirect properly.
+  // For now, mobile will still be handled because flutter intercepts wheels://payment/failure if we use it.
+  // But we don't know client here, so we default to web.
+  return res.redirect(redirectByClient("web", "failure", { status: "FAILED" }))
 })
 
 export default router

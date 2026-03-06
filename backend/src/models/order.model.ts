@@ -11,6 +11,10 @@ export const ORDER_STATUSES = [
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number]
 
+// ✅ NEW: order client types
+export const ORDER_CLIENTS = ["web", "mobile"] as const
+export type OrderClient = (typeof ORDER_CLIENTS)[number]
+
 const OrderSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
@@ -39,12 +43,22 @@ const OrderSchema = new Schema(
       required: true,
     },
 
+    // ✅ NEW: store who initiated payment (web/mobile)
+    client: {
+      type: String,
+      enum: ORDER_CLIENTS,
+      default: "web",
+      required: true,
+      index: true,
+    },
+
     paidAt: { type: Date, default: null },
-    
+
     transaction_uuid: { type: String, default: null, index: true },
     transaction_code: { type: String, default: null },
   },
   { timestamps: true }
 )
+
 export type IOrder = InferSchemaType<typeof OrderSchema>
 export const OrderModel = mongoose.model("Order", OrderSchema)

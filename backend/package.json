@@ -16,7 +16,7 @@
     "test": "jest --runInBand",
     "test:unit": "jest --runInBand --testPathPatterns=__tests__/unit",
     "test:integration": "jest --runInBand --testPathPatterns=__tests__/integration",
-    "test:coverage": "jest --coverage --runInBand"
+    "coverage": "jest --coverage --runInBand"
   },
   "keywords": [],
   "author": "",

@@ -11,7 +11,7 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
 }
 
 export default function AdminTopbar() {
-  const pathname = usePathname()
+  const pathname = usePathname() || ""
 
   const meta =
     TITLES[pathname] ||

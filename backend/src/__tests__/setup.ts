@@ -11,6 +11,8 @@ const isIntegration = () => {
 
 beforeAll(async () => {
   if (!isIntegration()) return
+   jest.spyOn(console, "error").mockImplementation(() => {})
+  jest.spyOn(console, "log").mockImplementation(() => {})
 
   const url = process.env.MONGO_TEST_URL
   if (!url) throw new Error("MONGO_TEST_URL missing in .env.test")

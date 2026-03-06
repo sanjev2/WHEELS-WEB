@@ -124,7 +124,7 @@ export default function AdminUsersPage() {
           </button>
 
           <Link
-            href="/admin/users/create"
+            href="/admin/user/create"
             className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white
                        shadow-sm transition hover:bg-emerald-700 hover:shadow-md active:scale-[0.99]"
           >

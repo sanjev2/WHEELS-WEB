@@ -6,6 +6,7 @@ import { uploadProfilePicture } from "../middleware/upload.middleware"
 const router = Router()
 const controller = new AuthController()
 
+
 // ✅ only run multer when content-type is multipart/form-data
 const maybeUploadProfilePicture = (req: any, res: any, next: any) => {
   const ct = req.headers["content-type"] || ""

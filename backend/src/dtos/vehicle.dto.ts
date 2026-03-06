@@ -11,4 +11,8 @@ export const AdminCreateVehicleDTO = z.object({
   image: z.string().optional(),
 })
 
-export const AdminUpdateVehicleDTO = AdminCreateVehicleDTO.partial()
+// ✅ Update: allow partial updates BUT require at least 1 field
+export const AdminUpdateVehicleDTO = AdminCreateVehicleDTO.partial().refine(
+  (data) => Object.keys(data).length > 0,
+  { message: "No fields to update" }
+)
