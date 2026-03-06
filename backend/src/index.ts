@@ -3,7 +3,7 @@ import app from "./app"
 import { connectDatabase } from "./database/mongodb"
 import { PORT } from "./config/index"
 
-const HOST = "0.0.0.0" // ✅ important for emulator/device access
+const HOST = "0.0.0.0" 
 
 async function startServer() {
   await connectDatabase()

@@ -6,7 +6,6 @@ import path from "path"
 import authRoutes from "./routes/auth.routes"
 import adminUsersRoutes from "./routes/admin.routes"
 
-// ✅ NEW ROUTES
 import publicRoutes from "./routes/public.routes"
 import adminVehiclesRoutes from "./routes/admin.vehicles.routes"
 import adminPackagesRoutes from "./routes/admin.packages.routes"
@@ -16,7 +15,6 @@ import adminOrdersRoutes from "./routes/admin.order.routes"
 import ordersRoutes from "./routes/order.routes"
 import esewaRoutes from "./routes/esewa.routes"
 
-// ...
 
 const app: Application = express()
 
@@ -33,18 +31,14 @@ app.use(
 
 app.use("/public", express.static(path.join(process.cwd(), "public")))
 
-// ✅ EXISTING
 app.use("/api/auth", authRoutes)
 app.use("/api/admin/users", adminUsersRoutes)
 
-// ✅ PUBLIC
 app.use("/api", publicRoutes)
 
-// ✅ ADMIN
 app.use("/api/admin/vehicles", adminVehiclesRoutes)
 app.use("/api/admin/packages", adminPackagesRoutes)
 
-// ✅ CARS (AUTH)
 app.use("/api/cars", carRoutes)
 
 app.use("/api/admin/providers", adminProvidersRoutes)

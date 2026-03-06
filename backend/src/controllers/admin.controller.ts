@@ -13,7 +13,6 @@ function safeUser(user: any) {
 }
 
 export class AdminUsersController {
-  // ✅ POST /api/admin/users (supports Multer image)
   async createUser(req: Request, res: Response) {
     try {
       const parsed = AdminCreateUserDTO.safeParse(req.body)

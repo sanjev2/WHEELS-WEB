@@ -1,7 +1,6 @@
 import z from "zod"
 import { UserSchema } from "../types/user.type"
 
-// ✅ Public Signup DTO (role NOT allowed)
 export const CreateUserDTO = UserSchema.pick({
   name: true,
   email: true,
@@ -19,7 +18,6 @@ export const CreateUserDTO = UserSchema.pick({
 
 export type CreateUserDTO = z.infer<typeof CreateUserDTO>
 
-// ✅ Admin Create DTO (role allowed)
 export const AdminCreateUserDTO = UserSchema.pick({
   name: true,
   email: true,

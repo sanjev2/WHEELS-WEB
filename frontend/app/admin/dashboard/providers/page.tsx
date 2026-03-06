@@ -11,7 +11,6 @@ import type { AdminProvider } from "@/app/lib/api/admin/provider"
 const CATEGORIES = ["SUV", "SEDAN", "HATCHBACK"] as const
 const DEFAULT_CENTER = { lat: 27.7172, lng: 85.324 } // Kathmandu default
 
-// ✅ IMPORTANT: Leaflet must not run on SSR
 const MapPicker = dynamic(() => import("@/app/admin/components/MapPicker"), { ssr: false })
 
 export default function AdminProvidersPage() {
@@ -194,7 +193,7 @@ export default function AdminProvidersPage() {
           </div>
         </div>
 
-        {/* ✅ FREE MAP PIN */}
+        {/* FREE MAP PIN */}
         <div className="rounded-xl border p-4 space-y-3">
           <div className="text-sm font-semibold text-slate-900">Map Pin (OpenStreetMap)</div>
 

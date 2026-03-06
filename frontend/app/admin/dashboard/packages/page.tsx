@@ -25,8 +25,7 @@ export default function AdminPackagesPage() {
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>("SUV")
   const [price, setPrice] = useState<number>(0)
   const [durationMins, setDurationMins] = useState<number>(30)
-
-  // ✅ NEW: array
+  
   const [engineOilTypes, setEngineOilTypes] = useState<string[]>([])
 
   const [isActive, setIsActive] = useState(true)

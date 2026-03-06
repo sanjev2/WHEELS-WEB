@@ -18,9 +18,6 @@ const VehicleSchema = new Schema(
   { timestamps: true }
 )
 
-/**
- * ✅ Automatic type from schema
- */
 export type IVehicle = InferSchemaType<typeof VehicleSchema>
 
 export const VehicleModel = mongoose.model("Vehicle", VehicleSchema)

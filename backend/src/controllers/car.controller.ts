@@ -41,7 +41,7 @@ export class CarController {
 
       return res.status(201).json({ success: true, message: "Car added successfully", data: newCar })
     } catch (error: any) {
-      console.error("createCar ERROR:", error) // ✅ important
+      console.error("createCar ERROR:", error) 
       if (error?.code === 11000) {
         return res.status(400).json({ success: false, message: "License plate already exists" })
       }
@@ -62,7 +62,7 @@ export class CarController {
 
       return res.status(200).json({ success: true, count: cars.length, data: cars })
     } catch (error: any) {
-      console.error("getMyCars ERROR:", error) // ✅ important
+      console.error("getMyCars ERROR:", error)
       return res.status(500).json({
         success: false,
         message: error?.message || "Server error",
@@ -84,7 +84,7 @@ export class CarController {
 
       return res.status(200).json({ success: true, message: "Car deleted" })
     } catch (error: any) {
-      console.error("deleteCar ERROR:", error) // ✅ important
+      console.error("deleteCar ERROR:", error)
       return res.status(500).json({
         success: false,
         message: error?.message || "Server error",

@@ -9,5 +9,4 @@ export const adminCreateUserSchema = z.object({
   role: z.enum(["user", "admin"]).default("user"),
 })
 
-// ✅ IMPORTANT: confirmPassword is NOT included here.
 export type AdminCreateUserData = z.infer<typeof adminCreateUserSchema>

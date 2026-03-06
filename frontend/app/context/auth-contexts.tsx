@@ -84,7 +84,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // ⭐⭐⭐ THIS IS THE MAGIC FIX ⭐⭐⭐
   const login = async (payload: LoginData) => {
     setIsLoading(true)
     try {

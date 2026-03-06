@@ -15,7 +15,6 @@ const UserSchema: Schema = new Schema(
 
     profile_picture: { type: String, default: null },
 
-    // ✅ PASSWORD RESET FIELDS
     reset_code_hash: { type: String, default: null },
     reset_code_expires_at: { type: Date, default: null },
     reset_code_attempts: { type: Number, default: 0 },

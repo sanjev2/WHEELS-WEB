@@ -1,5 +1,4 @@
 export type BookingDraft = {
-  // ✅ required to save order later
   carId: string
 
   // package

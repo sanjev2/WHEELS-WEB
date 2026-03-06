@@ -32,7 +32,6 @@ export const UserSchema = z.object({
   role: z.enum(["user", "admin"]).optional().default("user"),
   profile_picture: z.string().nullable().optional(),
 
-  // ✅ RESET PASSWORD FIELDS (must exist here)
   reset_code_hash: z.string().nullable().optional(),
   reset_code_expires_at: z.date().nullable().optional(),
   reset_code_attempts: z.number().optional(),

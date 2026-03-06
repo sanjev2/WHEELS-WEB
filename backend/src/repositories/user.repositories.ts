@@ -7,7 +7,6 @@ export interface IUserRepository {
   getUserById(id: string): Promise<IUser | null>
   getAllUsers(): Promise<IUser[]>
 
-  // ✅ pagination
   getAllUsersPaginated(params: {
     page: number
     limit: number

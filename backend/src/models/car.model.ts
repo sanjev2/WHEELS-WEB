@@ -11,7 +11,6 @@ export interface ICar {
   fuelType: FuelType;
   boughtDate: Date;
 
-  // ✅ NEW
   category: CarCategory;
 
   owner: mongoose.Types.ObjectId;
@@ -53,7 +52,6 @@ const CarSchema = new Schema<ICar>(
       required: true,
     },
 
-    // ✅ NEW
     category: {
       type: String,
       enum: ["SUV", "SEDAN", "HATCHBACK"],

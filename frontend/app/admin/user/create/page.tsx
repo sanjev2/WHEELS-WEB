@@ -91,10 +91,8 @@ export default function CreateUserPage() {
       form.append("role", role)
       form.append("password", password)
 
-      // ✅ backend expects confirmPassword, so send it
       form.append("confirmPassword", confirmPassword)
 
-      // ✅ IMPORTANT: choose ONE that matches backend multer field name
       if (file) form.append("profilePicture", file)
       // if (file) form.append("profile_picture", file)
 
@@ -102,7 +100,6 @@ export default function CreateUserPage() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          // ❌ don't set Content-Type for FormData
         },
         body: form,
       })
@@ -124,7 +121,7 @@ export default function CreateUserPage() {
         throw new Error(msg)
       }
 
-      setSuccess("User created successfully ✅")
+      setSuccess("User created successfully")
 
       setName("")
       setEmail("")
@@ -397,7 +394,6 @@ export default function CreateUserPage() {
   )
 }
 
-/* ---------- UI Components ---------- */
 
 function Alert({
   type,

@@ -109,7 +109,6 @@ export default function Page() {
 
       await adminUsersApi.update(token, id, form)
 
-      // ✅ correct route
       router.replace("/admin/users")
     } catch (e: any) {
       setError(e?.message || "Update failed")
@@ -128,7 +127,6 @@ export default function Page() {
     setSaving(true)
     try {
       await adminUsersApi.remove(token, id)
-      // ✅ correct route
       router.replace("/admin/users")
     } catch (e: any) {
       setError(e?.message || "Delete failed")

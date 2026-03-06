@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { Users, Shield, Activity, ChevronRight, UserRoundCog, Sparkles } from "lucide-react"
 import { useAuth } from "@/app/context/auth-contexts"
-import { adminUsersApi } from "@/app/lib/api-clients" // ✅ IMPORTANT: import this
+import { adminUsersApi } from "@/app/lib/api-clients"
 
 type UserT = {
   _id: string

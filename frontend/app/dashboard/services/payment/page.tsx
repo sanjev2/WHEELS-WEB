@@ -39,11 +39,9 @@ export default function PaymentPage() {
     const paid = sp.get("paid")
     const statusQ = sp.get("status")
 
-    // ✅ If you choose to redirect to this page on success: ?paid=1
     if (paid === "1") {
       setStatus("RETURNED_SUCCESS")
       setErr(null)
-      // small success animation delay, then go orders
       const t = setTimeout(() => {
         clearBookingDraft()
         router.replace("/dashboard/orders?paid=1")
@@ -51,7 +49,6 @@ export default function PaymentPage() {
       return () => clearTimeout(t)
     }
 
-    // ✅ If backend redirects here with a failure/pending code
     if (statusQ && statusQ !== "COMPLETE") {
       setStatus("RETURNED_FAILED")
       setErr(`Payment status: ${statusQ}`)
@@ -93,7 +90,7 @@ export default function PaymentPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ REQUIRED
+          Authorization: `Bearer ${token}`, 
         },
         body: JSON.stringify({
           total_amount: String(draft.totalPrice),
